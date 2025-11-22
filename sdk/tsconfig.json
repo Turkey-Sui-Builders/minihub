@@ -14,7 +14,8 @@
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
     "jsx": "react"
+    ,"types": ["node"]
   },
-  "include": ["minihub.ts.old"],
+  "include": ["minihub.ts.old", "admin.ts"],
   "exclude": ["node_modules", "dist"]
 }

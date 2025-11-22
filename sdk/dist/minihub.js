@@ -1,0 +1,821 @@
+/**
+ * MiniHub SDK - Decentralized Job Board on Sui
+ *
+ * Bu SDK, MiniHub akıllı kontratı ile etkileşim için gerekli tüm fonksiyonları sağlar.
+ * React uygulamalarında kullanım için optimize edilmiştir.
+ *
+ * @module minihub-sdk
+ */
+import { Transaction } from '@mysten/sui/transactions';
+import { bcs } from '@mysten/sui/bcs';
+// ====== SDK Class ======
+// ====== SDK Sınıfı ======
+export class MiniHubSDK {
+    constructor(client, config) {
+        this.client = client;
+        this.config = config;
+    }
+    // ====== Getter Functions ======
+    // ====== Veri Okuma Fonksiyonları ======
+    /**
+     * JobBoard objesini getirir
+     */
+    async getJobBoard() {
+        try {
+            const object = await this.client.getObject({
+                id: this.config.jobBoardId,
+                options: { showContent: true },
+            });
+            if (!object.data || !object.data.content || object.data.content.dataType !== 'moveObject') {
+                return null;
+            }
+            const fields = object.data.content.fields;
+            return {
+                id: fields.id.id,
+                jobCount: Number(fields.job_count),
+                jobIds: fields.job_ids || [],
+            };
+        }
+        catch (error) {
+            console.error('Error fetching JobBoard:', error);
+            return null;
+        }
+    }
+    /**
+     * Belirli bir iş ilanını getirir
+     */
+    async getJob(jobId) {
+        try {
+            const object = await this.client.getObject({
+                id: jobId,
+                options: { showContent: true },
+            });
+            if (!object.data || !object.data.content || object.data.content.dataType !== 'moveObject') {
+                return null;
+            }
+            const fields = object.data.content.fields;
+            return {
+                id: fields.id.id,
+                employer: fields.employer,
+                employerProfileId: fields.employer_profile_id,
+                title: fields.title,
+                description: fields.description,
+                salary: fields.salary ? Number(fields.salary) : undefined,
+                applicationCount: Number(fields.application_count),
+                hiredCandidate: fields.hired_candidate || undefined,
+                isActive: fields.is_active,
+                deadline: Number(fields.deadline),
+            };
+        }
+        catch (error) {
+            console.error('Error fetching Job:', error);
+            return null;
+        }
+    }
+    /**
+     * Tüm iş ilanlarını getirir
+     */
+    async getAllJobs() {
+        try {
+            const jobBoard = await this.getJobBoard();
+            if (!jobBoard || jobBoard.jobIds.length === 0) {
+                return [];
+            }
+            const jobs = await Promise.all(jobBoard.jobIds.map(jobId => this.getJob(jobId)));
+            return jobs.filter((job) => job !== null);
+        }
+        catch (error) {
+            console.error('Error fetching all jobs:', error);
+            return [];
+        }
+    }
+    /**
+     * Aktif iş ilanlarını getirir
+     */
+    async getActiveJobs() {
+        const allJobs = await this.getAllJobs();
+        return allJobs.filter(job => job.isActive && !job.hiredCandidate);
+    }
+    /**
+     * Belirli bir işverene ait iş ilanlarını getirir
+     */
+    async getJobsByEmployer(employerAddress) {
+        const allJobs = await this.getAllJobs();
+        return allJobs.filter(job => job.employer === employerAddress);
+    }
+    /**
+     * Kullanıcı profilini getirir
+     */
+    async getUserProfile(profileId) {
+        try {
+            const object = await this.client.getObject({
+                id: profileId,
+                options: { showContent: true },
+            });
+            if (!object.data || !object.data.content || object.data.content.dataType !== 'moveObject') {
+                return null;
+            }
+            const fields = object.data.content.fields;
+            return {
+                id: fields.id.id,
+                userAddress: fields.user_address,
+                name: fields.name,
+                bio: fields.bio,
+                avatarUrl: fields.avatar_url,
+                skills: fields.skills || [],
+                experienceYears: Number(fields.experience_years),
+                portfolioUrl: fields.portfolio_url,
+                createdAt: Number(fields.created_at),
+                updatedAt: Number(fields.updated_at),
+            };
+        }
+        catch (error) {
+            console.error('Error fetching UserProfile:', error);
+            return null;
+        }
+    }
+    /**
+     * İşveren profilini getirir
+     */
+    async getEmployerProfile(profileId) {
+        try {
+            const object = await this.client.getObject({
+                id: profileId,
+                options: { showContent: true },
+            });
+            if (!object.data || !object.data.content || object.data.content.dataType !== 'moveObject') {
+                return null;
+            }
+            const fields = object.data.content.fields;
+            return {
+                id: fields.id.id,
+                employerAddress: fields.employer_address,
+                companyName: fields.company_name,
+                description: fields.description,
+                logoUrl: fields.logo_url,
+                website: fields.website,
+                industry: fields.industry,
+                employeeCount: Number(fields.employee_count),
+                foundedYear: Number(fields.founded_year),
+                createdAt: Number(fields.created_at),
+                updatedAt: Number(fields.updated_at),
+            };
+        }
+        catch (error) {
+            console.error('Error fetching EmployerProfile:', error);
+            return null;
+        }
+    }
+    /**
+     * UserRegistry objesini getirir
+     */
+    async getUserRegistry() {
+        try {
+            const object = await this.client.getObject({
+                id: this.config.userRegistryId,
+                options: { showContent: true },
+            });
+            if (!object.data || !object.data.content || object.data.content.dataType !== 'moveObject') {
+                return null;
+            }
+            const fields = object.data.content.fields;
+            return {
+                id: fields.id.id,
+                userProfiles: fields.user_profiles || [],
+                userCount: Number(fields.user_count),
+            };
+        }
+        catch (error) {
+            console.error('Error fetching UserRegistry:', error);
+            return null;
+        }
+    }
+    /**
+     * EmployerRegistry objesini getirir
+     */
+    async getEmployerRegistry() {
+        try {
+            const object = await this.client.getObject({
+                id: this.config.employerRegistryId,
+                options: { showContent: true },
+            });
+            if (!object.data || !object.data.content || object.data.content.dataType !== 'moveObject') {
+                return null;
+            }
+            const fields = object.data.content.fields;
+            return {
+                id: fields.id.id,
+                employerProfiles: fields.employer_profiles || [],
+                employerCount: Number(fields.employer_count),
+            };
+        }
+        catch (error) {
+            console.error('Error fetching EmployerRegistry:', error);
+            return null;
+        }
+    }
+    /**
+     * Tüm kullanıcı profillerini getirir
+     */
+    async getAllUserProfiles() {
+        try {
+            const registry = await this.getUserRegistry();
+            if (!registry || registry.userProfiles.length === 0) {
+                return [];
+            }
+            const profiles = await Promise.all(registry.userProfiles.map(profileId => this.getUserProfile(profileId)));
+            return profiles.filter((profile) => profile !== null);
+        }
+        catch (error) {
+            console.error('Error fetching all user profiles:', error);
+            return [];
+        }
+    }
+    /**
+     * Tüm işveren profillerini getirir
+     */
+    async getAllEmployerProfiles() {
+        try {
+            const registry = await this.getEmployerRegistry();
+            if (!registry || registry.employerProfiles.length === 0) {
+                return [];
+            }
+            const profiles = await Promise.all(registry.employerProfiles.map(profileId => this.getEmployerProfile(profileId)));
+            return profiles.filter((profile) => profile !== null);
+        }
+        catch (error) {
+            console.error('Error fetching all employer profiles:', error);
+            return [];
+        }
+    }
+    /**
+     * Belirli bir kullanıcıya ait profili adresle getirir
+     */
+    async getUserProfileByAddress(userAddress) {
+        const allProfiles = await this.getAllUserProfiles();
+        return allProfiles.find(profile => profile.userAddress === userAddress) || null;
+    }
+    /**
+     * Belirli bir işverene ait profili adresle getirir
+     */
+    async getEmployerProfileByAddress(employerAddress) {
+        const allProfiles = await this.getAllEmployerProfiles();
+        return allProfiles.find(profile => profile.employerAddress === employerAddress) || null;
+    }
+    /**
+     * Bir kullanıcının sahip olduğu EmployerCap'leri getirir
+     */
+    async getEmployerCaps(ownerAddress) {
+        try {
+            const objects = await this.client.getOwnedObjects({
+                owner: ownerAddress,
+                filter: {
+                    StructType: `${this.config.packageId}::minihub::EmployerCap`,
+                },
+                options: { showContent: true },
+            });
+            const caps = [];
+            for (const obj of objects.data) {
+                if (obj.data && obj.data.content && obj.data.content.dataType === 'moveObject') {
+                    const fields = obj.data.content.fields;
+                    caps.push({
+                        id: fields.id.id,
+                        jobId: fields.job_id,
+                    });
+                }
+            }
+            return caps;
+        }
+        catch (error) {
+            console.error('Error fetching EmployerCaps:', error);
+            return [];
+        }
+    }
+    /**
+     * Bir işe yapılan belirli bir başvuruyu getirir
+     */
+    async getApplication(jobId, candidateAddress, index) {
+        try {
+            // Dynamic field olarak saklandığı için özel bir sorgu gerekir
+            const job = await this.client.getObject({
+                id: jobId,
+                options: { showContent: true },
+            });
+            if (!job.data)
+                return null;
+            // Dynamic fields'ı getir
+            const dynamicFields = await this.client.getDynamicFields({
+                parentId: jobId,
+            });
+            // İlgili başvuruyu bul
+            for (const field of dynamicFields.data) {
+                const fieldObject = await this.client.getObject({
+                    id: field.objectId,
+                    options: { showContent: true },
+                });
+                if (fieldObject.data &&
+                    fieldObject.data.content &&
+                    fieldObject.data.content.dataType === 'moveObject') {
+                    const fields = fieldObject.data.content.fields;
+                    if (fields.candidate === candidateAddress) {
+                        return {
+                            id: fields.id.id,
+                            candidate: fields.candidate,
+                            userProfileId: fields.user_profile_id,
+                            jobId: fields.job_id,
+                            coverMessage: fields.cover_message,
+                            timestamp: Number(fields.timestamp),
+                            cvUrl: fields.cv_url,
+                        };
+                    }
+                }
+            }
+            return null;
+        }
+        catch (error) {
+            console.error('Error fetching application:', error);
+            return null;
+        }
+    }
+    /**
+     * Bir işe yapılan tüm başvuruları getirir
+     */
+    async getJobApplications(jobId) {
+        try {
+            const dynamicFields = await this.client.getDynamicFields({
+                parentId: jobId,
+            });
+            const applications = [];
+            for (const field of dynamicFields.data) {
+                const fieldObject = await this.client.getObject({
+                    id: field.objectId,
+                    options: { showContent: true },
+                });
+                if (fieldObject.data &&
+                    fieldObject.data.content &&
+                    fieldObject.data.content.dataType === 'moveObject') {
+                    const fields = fieldObject.data.content.fields;
+                    applications.push({
+                        id: fields.id.id,
+                        candidate: fields.candidate,
+                        userProfileId: fields.user_profile_id,
+                        jobId: fields.job_id,
+                        coverMessage: fields.cover_message,
+                        timestamp: Number(fields.timestamp),
+                        cvUrl: fields.cv_url,
+                    });
+                }
+            }
+            return applications;
+        }
+        catch (error) {
+            console.error('Error fetching job applications:', error);
+            return [];
+        }
+    }
+    // ====== Transaction Functions ======
+    // ====== İşlem Fonksiyonları ======
+    /**
+     * Yeni bir iş ilanı oluşturur (Transaction Block döndürür)
+     */
+    createPostJobTransaction(params) {
+        const tx = new Transaction();
+        // For Option<u64>, use bcs encoding
+        const salaryArg = params.salary
+            ? tx.pure.option('u64', params.salary)
+            : tx.pure.option('u64', null);
+        tx.moveCall({
+            target: `${this.config.packageId}::minihub::post_job`,
+            arguments: [
+                tx.object(this.config.jobBoardId),
+                tx.object(params.employerProfileId),
+                tx.pure.string(params.title),
+                tx.pure.string(params.description),
+                salaryArg,
+                tx.pure.u64(params.deadline),
+            ],
+        });
+        return tx;
+    }
+    /**
+     * Bir işe başvuru yapar (Transaction Block döndürür)
+     */
+    createApplyToJobTransaction(params) {
+        const tx = new Transaction();
+        tx.moveCall({
+            target: `${this.config.packageId}::minihub::apply_to_job`,
+            arguments: [
+                tx.object(params.jobId),
+                tx.object(params.userProfileId),
+                tx.pure.string(params.coverMessage),
+                tx.pure.string(params.cvUrl),
+                tx.object(this.config.clockId),
+            ],
+        });
+        return tx;
+    }
+    /**
+     * Bir adayı işe alır (Transaction Block döndürür)
+     */
+    createHireCandidateTransaction(params) {
+        const tx = new Transaction();
+        tx.moveCall({
+            target: `${this.config.packageId}::minihub::hire_candidate`,
+            arguments: [
+                tx.object(params.jobId),
+                tx.object(params.employerCapId),
+                tx.pure.address(params.candidateAddress),
+                tx.pure.u64(params.candidateIndex),
+            ],
+        });
+        return tx;
+    }
+    /**
+     * Yeni kullanıcı profili oluşturur (Transaction Block döndürür)
+     */
+    createUserProfileTransaction(params) {
+        const tx = new Transaction();
+        tx.moveCall({
+            target: `${this.config.packageId}::minihub::create_user_profile`,
+            arguments: [
+                tx.object(this.config.userRegistryId),
+                tx.pure.string(params.name),
+                tx.pure.string(params.bio),
+                tx.pure.string(params.avatarUrl),
+                tx.pure(bcs.vector(bcs.String).serialize(params.skills).toBytes()),
+                tx.pure.u64(params.experienceYears),
+                tx.pure.string(params.portfolioUrl),
+                tx.object(this.config.clockId),
+            ],
+        });
+        return tx;
+    }
+    /**
+     * Yeni işveren profili oluşturur (Transaction Block döndürür)
+     */
+    createEmployerProfileTransaction(params) {
+        const tx = new Transaction();
+        tx.moveCall({
+            target: `${this.config.packageId}::minihub::create_employer_profile`,
+            arguments: [
+                tx.object(this.config.employerRegistryId),
+                tx.pure.string(params.companyName),
+                tx.pure.string(params.description),
+                tx.pure.string(params.logoUrl),
+                tx.pure.string(params.website),
+                tx.pure.string(params.industry),
+                tx.pure.u64(params.employeeCount),
+                tx.pure.u64(params.foundedYear),
+                tx.object(this.config.clockId),
+            ],
+        });
+        return tx;
+    }
+    /**
+     * Kullanıcı profilini günceller (Transaction Block döndürür)
+     */
+    createUpdateUserProfileTransaction(params) {
+        const tx = new Transaction();
+        tx.moveCall({
+            target: `${this.config.packageId}::minihub::update_user_profile`,
+            arguments: [
+                tx.object(params.userProfileId),
+                tx.pure.string(params.name),
+                tx.pure.string(params.bio),
+                tx.pure.string(params.avatarUrl),
+                tx.pure(bcs.vector(bcs.String).serialize(params.skills).toBytes()),
+                tx.pure.u64(params.experienceYears),
+                tx.pure.string(params.portfolioUrl),
+                tx.object(this.config.clockId),
+            ],
+        });
+        return tx;
+    }
+    /**
+     * İşveren profilini günceller (Transaction Block döndürür)
+     */
+    createUpdateEmployerProfileTransaction(params) {
+        const tx = new Transaction();
+        tx.moveCall({
+            target: `${this.config.packageId}::minihub::update_employer_profile`,
+            arguments: [
+                tx.object(params.employerProfileId),
+                tx.pure.string(params.companyName),
+                tx.pure.string(params.description),
+                tx.pure.string(params.logoUrl),
+                tx.pure.string(params.website),
+                tx.pure.string(params.industry),
+                tx.pure.u64(params.employeeCount),
+                tx.pure.u64(params.foundedYear),
+                tx.object(this.config.clockId),
+            ],
+        });
+        return tx;
+    }
+    // ====== Helper Functions ======
+    // ====== Yardımcı Fonksiyonlar ======
+    /**
+     * İş ilanının son başvuru tarihinin geçip geçmediğini kontrol eder
+     */
+    isJobDeadlinePassed(job) {
+        return Date.now() > job.deadline;
+    }
+    /**
+     * İş ilanının aktif olup olmadığını kontrol eder
+     */
+    isJobActive(job) {
+        return job.isActive && !job.hiredCandidate && !this.isJobDeadlinePassed(job);
+    }
+    /**
+     * Maaş bilgisini formatlar
+     */
+    formatSalary(salary) {
+        if (!salary)
+            return 'Belirtilmemiş';
+        return new Intl.NumberFormat('tr-TR', {
+            style: 'currency',
+            currency: 'TRY',
+            minimumFractionDigits: 0,
+        }).format(salary);
+    }
+    /**
+     * Timestamp'i okunabilir tarihe çevirir
+     */
+    formatTimestamp(timestamp) {
+        return new Date(timestamp).toLocaleDateString('tr-TR', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+        });
+    }
+    /**
+     * Süre farkını hesaplar (örn: "2 gün önce")
+     */
+    getRelativeTime(timestamp) {
+        const now = Date.now();
+        const diff = now - timestamp;
+        const seconds = Math.floor(diff / 1000);
+        const minutes = Math.floor(seconds / 60);
+        const hours = Math.floor(minutes / 60);
+        const days = Math.floor(hours / 24);
+        const weeks = Math.floor(days / 7);
+        const months = Math.floor(days / 30);
+        const years = Math.floor(days / 365);
+        if (years > 0)
+            return `${years} yıl önce`;
+        if (months > 0)
+            return `${months} ay önce`;
+        if (weeks > 0)
+            return `${weeks} hafta önce`;
+        if (days > 0)
+            return `${days} gün önce`;
+        if (hours > 0)
+            return `${hours} saat önce`;
+        if (minutes > 0)
+            return `${minutes} dakika önce`;
+        return 'Az önce';
+    }
+    /**
+     * Son başvuru tarihine kalan süreyi hesaplar
+     */
+    getTimeUntilDeadline(deadline) {
+        const now = Date.now();
+        const diff = deadline - now;
+        if (diff <= 0)
+            return 'Süresi dolmuş';
+        const seconds = Math.floor(diff / 1000);
+        const minutes = Math.floor(seconds / 60);
+        const hours = Math.floor(minutes / 60);
+        const days = Math.floor(hours / 24);
+        const weeks = Math.floor(days / 7);
+        const months = Math.floor(days / 30);
+        if (months > 0)
+            return `${months} ay`;
+        if (weeks > 0)
+            return `${weeks} hafta`;
+        if (days > 0)
+            return `${days} gün`;
+        if (hours > 0)
+            return `${hours} saat`;
+        if (minutes > 0)
+            return `${minutes} dakika`;
+        return `${seconds} saniye`;
+    }
+    /**
+     * İş ilanlarını başvuru sayısına göre sıralar
+     */
+    sortJobsByApplicationCount(jobs, ascending = false) {
+        return [...jobs].sort((a, b) => {
+            return ascending
+                ? a.applicationCount - b.applicationCount
+                : b.applicationCount - a.applicationCount;
+        });
+    }
+    /**
+     * İş ilanlarını tarihe göre sıralar
+     */
+    sortJobsByDeadline(jobs, ascending = true) {
+        return [...jobs].sort((a, b) => {
+            return ascending ? a.deadline - b.deadline : b.deadline - a.deadline;
+        });
+    }
+    /**
+     * İş ilanlarını maaşa göre filtreler
+     */
+    filterJobsBySalaryRange(jobs, minSalary, maxSalary) {
+        return jobs.filter(job => {
+            if (!job.salary)
+                return false;
+            if (minSalary && job.salary < minSalary)
+                return false;
+            if (maxSalary && job.salary > maxSalary)
+                return false;
+            return true;
+        });
+    }
+    /**
+     * İş ilanlarını başlık veya açıklamaya göre arar
+     */
+    searchJobs(jobs, query) {
+        const lowerQuery = query.toLowerCase();
+        return jobs.filter(job => job.title.toLowerCase().includes(lowerQuery) ||
+            job.description.toLowerCase().includes(lowerQuery));
+    }
+    /**
+     * Kullanıcı profillerini yeteneklere göre arar
+     */
+    searchUserProfilesBySkills(profiles, skills) {
+        const lowerSkills = skills.map(s => s.toLowerCase());
+        return profiles.filter(profile => profile.skills.some(skill => lowerSkills.some(s => skill.toLowerCase().includes(s))));
+    }
+    /**
+     * İşveren profillerini sektöre göre filtreler
+     */
+    filterEmployersByIndustry(profiles, industry) {
+        const lowerIndustry = industry.toLowerCase();
+        return profiles.filter(profile => profile.industry.toLowerCase().includes(lowerIndustry));
+    }
+    /**
+     * İstatistik hesaplar
+     */
+    async getStatistics() {
+        const [jobBoard, userRegistry, employerRegistry, allJobs] = await Promise.all([
+            this.getJobBoard(),
+            this.getUserRegistry(),
+            this.getEmployerRegistry(),
+            this.getAllJobs(),
+        ]);
+        const activeJobs = allJobs.filter(job => this.isJobActive(job)).length;
+        const filledJobs = allJobs.filter(job => job.hiredCandidate).length;
+        const totalApplications = allJobs.reduce((sum, job) => sum + job.applicationCount, 0);
+        return {
+            totalJobs: jobBoard?.jobCount || 0,
+            activeJobs,
+            totalApplications,
+            totalUsers: userRegistry?.userCount || 0,
+            totalEmployers: employerRegistry?.employerCount || 0,
+            filledJobs,
+        };
+    }
+    /**
+     * Event'leri dinler ve parse eder
+     */
+    async getEvents(params) {
+        try {
+            const { data } = await this.client.queryEvents({
+                query: {
+                    MoveEventType: `${this.config.packageId}::minihub::${params.eventType}`,
+                },
+                limit: params.limit,
+                cursor: params.cursor ? { eventSeq: params.cursor } : undefined,
+            });
+            return data.map((event) => event.parsedJson);
+        }
+        catch (error) {
+            console.error('Error fetching events:', error);
+            return [];
+        }
+    }
+    /**
+     * Tüm iş ilanı olaylarını getirir
+     */
+    async getJobPostedEvents(limit) {
+        return this.getEvents({ eventType: 'JobPosted', limit });
+    }
+    /**
+     * Tüm başvuru olaylarını getirir
+     */
+    async getApplicationSubmittedEvents(limit) {
+        return this.getEvents({ eventType: 'ApplicationSubmitted', limit });
+    }
+    /**
+     * Tüm işe alma olaylarını getirir
+     */
+    async getCandidateHiredEvents(limit) {
+        return this.getEvents({ eventType: 'CandidateHired', limit });
+    }
+    /**
+     * Kullanıcının bir işe başvurup başvurmadığını kontrol eder
+     */
+    async hasUserAppliedToJob(jobId, userAddress) {
+        const applications = await this.getJobApplications(jobId);
+        return applications.some(app => app.candidate === userAddress);
+    }
+    /**
+     * Kullanıcının tüm başvurularını getirir
+     */
+    async getUserApplications(userAddress) {
+        const allJobs = await this.getAllJobs();
+        const applications = [];
+        for (const job of allJobs) {
+            const jobApplications = await this.getJobApplications(job.id);
+            const userApps = jobApplications.filter(app => app.candidate === userAddress);
+            applications.push(...userApps);
+        }
+        return applications;
+    }
+    /**
+     * Validasyon: İş ilanı oluşturma parametrelerini kontrol eder
+     */
+    validatePostJobParams(params) {
+        const errors = [];
+        if (!params.title || params.title.trim().length === 0) {
+            errors.push('İş başlığı boş olamaz');
+        }
+        if (params.title.length > 200) {
+            errors.push('İş başlığı 200 karakterden uzun olamaz');
+        }
+        if (!params.description || params.description.trim().length === 0) {
+            errors.push('İş açıklaması boş olamaz');
+        }
+        if (params.deadline <= Date.now()) {
+            errors.push('Son başvuru tarihi gelecekte olmalıdır');
+        }
+        return {
+            valid: errors.length === 0,
+            errors,
+        };
+    }
+    /**
+     * Validasyon: Profil oluşturma parametrelerini kontrol eder
+     */
+    validateUserProfileParams(params) {
+        const errors = [];
+        if (!params.name || params.name.trim().length === 0) {
+            errors.push('İsim boş olamaz');
+        }
+        if (params.name.length > 100) {
+            errors.push('İsim 100 karakterden uzun olamaz');
+        }
+        if (!params.bio || params.bio.trim().length === 0) {
+            errors.push('Biyografi boş olamaz');
+        }
+        if (params.experienceYears < 0 || params.experienceYears > 50) {
+            errors.push('Tecrübe yılı 0-50 arasında olmalıdır');
+        }
+        return {
+            valid: errors.length === 0,
+            errors,
+        };
+    }
+}
+// ====== Factory Function ======
+// ====== Fabrika Fonksiyonu ======
+/**
+ * MiniHubSDK instance'ı oluşturur
+ */
+export function createMiniHubSDK(client, config) {
+    return new MiniHubSDK(client, config);
+}
+// ====== Constants ======
+// ====== Sabitler ======
+/**
+ * Varsayılan Clock objesi ID'si (Sui mainnet/testnet)
+ */
+export const DEFAULT_CLOCK_ID = '0x6';
+/**
+ * Paket tipleri
+ */
+export const MODULE_NAME = 'minihub';
+/**
+ * Error kodları
+ */
+export var ErrorCode;
+(function (ErrorCode) {
+    ErrorCode[ErrorCode["NOT_AUTHORIZED"] = 1] = "NOT_AUTHORIZED";
+    ErrorCode[ErrorCode["JOB_ALREADY_FILLED"] = 2] = "JOB_ALREADY_FILLED";
+    ErrorCode[ErrorCode["INVALID_APPLICATION"] = 3] = "INVALID_APPLICATION";
+    ErrorCode[ErrorCode["DEADLINE_PASSED"] = 4] = "DEADLINE_PASSED";
+})(ErrorCode || (ErrorCode = {}));
+/**
+ * Error mesajları
+ */
+export const ERROR_MESSAGES = {
+    [ErrorCode.NOT_AUTHORIZED]: 'Yetkisiz erişim',
+    [ErrorCode.JOB_ALREADY_FILLED]: 'İş pozisyonu zaten dolu',
+    [ErrorCode.INVALID_APPLICATION]: 'Geçersiz başvuru',
+    [ErrorCode.DEADLINE_PASSED]: 'Son başvuru tarihi geçti',
+};
+export default MiniHubSDK;

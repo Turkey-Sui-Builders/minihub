@@ -9,6 +9,7 @@
 
 import { Transaction } from '@mysten/sui/transactions';
 import { SuiClient } from '@mysten/sui/client';
+import { bcs } from '@mysten/sui/bcs';
 
 // ====== Types ======
 // ====== Tipler ======
@@ -595,19 +596,20 @@ export class MiniHubSDK {
   }): Transaction {
     const tx = new Transaction();
 
+    // For Option<u64>, use bcs encoding
     const salaryArg = params.salary
-      ? tx.pure([params.salary], 'vector<u64>')
-      : tx.pure([], 'vector<u64>');
+      ? tx.pure.option('u64', params.salary)
+      : tx.pure.option('u64', null);
 
     tx.moveCall({
       target: `${this.config.packageId}::minihub::post_job`,
       arguments: [
         tx.object(this.config.jobBoardId),
         tx.object(params.employerProfileId),
-        tx.pure(params.title, 'string'),
-        tx.pure(params.description, 'string'),
+        tx.pure.string(params.title),
+        tx.pure.string(params.description),
         salaryArg,
-        tx.pure(params.deadline, 'u64'),
+        tx.pure.u64(params.deadline),
       ],
     });
 
@@ -630,8 +632,8 @@ export class MiniHubSDK {
       arguments: [
         tx.object(params.jobId),
         tx.object(params.userProfileId),
-        tx.pure(params.coverMessage, 'string'),
-        tx.pure(params.cvUrl, 'string'),
+        tx.pure.string(params.coverMessage),
+        tx.pure.string(params.cvUrl),
         tx.object(this.config.clockId),
       ],
     });
@@ -655,8 +657,8 @@ export class MiniHubSDK {
       arguments: [
         tx.object(params.jobId),
         tx.object(params.employerCapId),
-        tx.pure(params.candidateAddress, 'address'),
-        tx.pure(params.candidateIndex, 'u64'),
+        tx.pure.address(params.candidateAddress),
+        tx.pure.u64(params.candidateIndex),
       ],
     });
 
@@ -680,12 +682,12 @@ export class MiniHubSDK {
       target: `${this.config.packageId}::minihub::create_user_profile`,
       arguments: [
         tx.object(this.config.userRegistryId),
-        tx.pure(params.name, 'string'),
-        tx.pure(params.bio, 'string'),
-        tx.pure(params.avatarUrl, 'string'),
-        tx.pure(params.skills, 'vector<string>'),
-        tx.pure(params.experienceYears, 'u64'),
-        tx.pure(params.portfolioUrl, 'string'),
+        tx.pure.string(params.name),
+        tx.pure.string(params.bio),
+        tx.pure.string(params.avatarUrl),
+        tx.pure(bcs.vector(bcs.String).serialize(params.skills).toBytes()),
+        tx.pure.u64(params.experienceYears),
+        tx.pure.string(params.portfolioUrl),
         tx.object(this.config.clockId),
       ],
     });
@@ -711,13 +713,13 @@ export class MiniHubSDK {
       target: `${this.config.packageId}::minihub::create_employer_profile`,
       arguments: [
         tx.object(this.config.employerRegistryId),
-        tx.pure(params.companyName, 'string'),
-        tx.pure(params.description, 'string'),
-        tx.pure(params.logoUrl, 'string'),
-        tx.pure(params.website, 'string'),
-        tx.pure(params.industry, 'string'),
-        tx.pure(params.employeeCount, 'u64'),
-        tx.pure(params.foundedYear, 'u64'),
+        tx.pure.string(params.companyName),
+        tx.pure.string(params.description),
+        tx.pure.string(params.logoUrl),
+        tx.pure.string(params.website),
+        tx.pure.string(params.industry),
+        tx.pure.u64(params.employeeCount),
+        tx.pure.u64(params.foundedYear),
         tx.object(this.config.clockId),
       ],
     });
@@ -743,12 +745,12 @@ export class MiniHubSDK {
       target: `${this.config.packageId}::minihub::update_user_profile`,
       arguments: [
         tx.object(params.userProfileId),
-        tx.pure(params.name, 'string'),
-        tx.pure(params.bio, 'string'),
-        tx.pure(params.avatarUrl, 'string'),
-        tx.pure(params.skills, 'vector<string>'),
-        tx.pure(params.experienceYears, 'u64'),
-        tx.pure(params.portfolioUrl, 'string'),
+        tx.pure.string(params.name),
+        tx.pure.string(params.bio),
+        tx.pure.string(params.avatarUrl),
+        tx.pure(bcs.vector(bcs.String).serialize(params.skills).toBytes()),
+        tx.pure.u64(params.experienceYears),
+        tx.pure.string(params.portfolioUrl),
         tx.object(this.config.clockId),
       ],
     });
@@ -775,13 +777,13 @@ export class MiniHubSDK {
       target: `${this.config.packageId}::minihub::update_employer_profile`,
       arguments: [
         tx.object(params.employerProfileId),
-        tx.pure(params.companyName, 'string'),
-        tx.pure(params.description, 'string'),
-        tx.pure(params.logoUrl, 'string'),
-        tx.pure(params.website, 'string'),
-        tx.pure(params.industry, 'string'),
-        tx.pure(params.employeeCount, 'u64'),
-        tx.pure(params.foundedYear, 'u64'),
+        tx.pure.string(params.companyName),
+        tx.pure.string(params.description),
+        tx.pure.string(params.logoUrl),
+        tx.pure.string(params.website),
+        tx.pure.string(params.industry),
+        tx.pure.u64(params.employeeCount),
+        tx.pure.u64(params.foundedYear),
         tx.object(this.config.clockId),
       ],
     });
@@ -996,7 +998,7 @@ export class MiniHubSDK {
   async getEvents(params: {
     eventType: string;
     limit?: number;
-    cursor?: string;
+    cursor?: string | null;
   }): Promise<any[]> {
     try {
       const { data } = await this.client.queryEvents({
@@ -1004,7 +1006,7 @@ export class MiniHubSDK {
           MoveEventType: `${this.config.packageId}::minihub::${params.eventType}`,
         },
         limit: params.limit,
-        cursor: params.cursor,
+        cursor: params.cursor ? { eventSeq: params.cursor } as any : undefined,
       });
 
       return data.map((event: any) => event.parsedJson);

@@ -2,3 +2,8 @@ build/*
 traces/*
 .trace
 .coverage*
+
+/sdk/minihub.config.json
+.DS_Store
+node_modules/
+/sdk/node_modules/
