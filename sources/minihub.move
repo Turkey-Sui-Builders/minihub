@@ -177,6 +177,13 @@ module minihub::minihub {
         updated_at: u64,             // Güncelleme zamanı
     }
 
+    /// İş ilanı durumu değiştiğinde tetiklenir
+    public struct JobStatusChanged has copy, drop {
+        job_id: ID,                  // İlan ID'si
+        employer: address,           // İşveren adresi
+        is_active: bool,             // Yeni aktiflik durumu
+    }
+
     // ====== Init Function ======
     // ====== Başlatma Fonksiyonu ======
     
@@ -412,6 +419,36 @@ module minihub::minihub {
             job_id: object::id(job),
             employer,
             candidate: candidate_address,
+        });
+    }
+
+    
+
+    /// Employer disables/enables a job (access control via EmployerCap)
+    /// İşveren bir iş ilanını devre dışı bırakır/etkinleştirir (EmployerCap ile erişim kontrolü)
+    public fun set_job_active_status(
+        job: &mut Job,
+        employer_cap: &EmployerCap,
+        is_active: bool,
+        ctx: &mut TxContext
+    ) {
+        let employer = tx_context::sender(ctx);
+        
+        // Access control: verify employer owns this job via capability
+        // Erişim kontrolü: işverenin bu ilanın sahibi olduğunu yetki ile doğrula
+        assert!(employer_cap.job_id == object::id(job), ENotAuthorized);
+        assert!(job.employer == employer, ENotAuthorized);
+        
+        // Update job status
+        // İş ilanı durumunu güncelle
+        job.is_active = is_active;
+        
+        // Emit event
+        // Olay yayınla
+        event::emit(JobStatusChanged {
+            job_id: object::id(job),
+            employer,
+            is_active,
         });
     }
 

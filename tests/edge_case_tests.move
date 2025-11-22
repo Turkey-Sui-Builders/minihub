@@ -1,3 +1,4 @@
+#[allow(unused_variable)]
 #[test_only]
 module minihub::edge_case_tests {
     use minihub::minihub::{
