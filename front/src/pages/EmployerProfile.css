@@ -1,0 +1,468 @@
+/* Employer Profile Container */
+.employer-profile-container {
+  max-width: 800px;
+  margin: 2rem auto;
+  padding: 2rem;
+}
+
+/* Header */
+.employer-profile-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #ff6b35;
+}
+
+.employer-profile-header h1 {
+  font-size: 2rem;
+  color: #333;
+  margin: 0 0 0.5rem 0;
+}
+
+.employer-profile-status {
+  font-size: 0.9rem;
+  color: #666;
+  font-family: 'Courier New', monospace;
+  margin: 0;
+}
+
+/* Buttons */
+.edit-button,
+.cancel-button,
+.save-button {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.edit-button {
+  background: #ff6b35;
+  color: white;
+}
+
+.edit-button:hover {
+  background: #ff5722;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+}
+
+.cancel-button {
+  background: #666;
+  color: white;
+}
+
+.cancel-button:hover {
+  background: #555;
+}
+
+.save-button {
+  background: #ff6b35;
+  color: white;
+  width: 100%;
+  margin-top: 1rem;
+}
+
+.save-button:hover:not(:disabled) {
+  background: #ff5722;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+}
+
+.save-button:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+/* Content */
+.employer-profile-content {
+  background: white;
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Avatar/Logo Section */
+.employer-profile-avatar-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding-bottom: 2rem;
+  border-bottom: 1px solid #eee;
+}
+
+.employer-profile-avatar {
+  width: 120px;
+  height: 120px;
+  border-radius: 12px;
+  object-fit: cover;
+  margin-bottom: 1rem;
+  border: 3px solid #ff6b35;
+}
+
+.employer-profile-avatar-placeholder {
+  width: 120px;
+  height: 120px;
+  border-radius: 12px;
+  background: #f5f5f5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1rem;
+  border: 3px solid #ddd;
+}
+
+/* Section */
+.employer-profile-section {
+  margin-bottom: 2rem;
+}
+
+.employer-profile-section h2 {
+  font-size: 1.5rem;
+  color: #333;
+  margin: 0 0 1.5rem 0;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid #ff6b35;
+}
+
+/* Field */
+.employer-profile-field {
+  margin-bottom: 1.5rem;
+}
+
+.employer-profile-field label {
+  display: block;
+  font-weight: 600;
+  color: #555;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.employer-profile-field input,
+.employer-profile-field textarea {
+  width: 100%;
+  padding: 0.75rem;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: border-color 0.3s ease;
+  font-family: inherit;
+}
+
+.employer-profile-field input:focus,
+.employer-profile-field textarea:focus {
+  outline: none;
+  border-color: #ff6b35;
+}
+
+.employer-profile-field textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+.employer-profile-value {
+  padding: 0.75rem;
+  background: #f9f9f9;
+  border-radius: 8px;
+  color: #333;
+  font-size: 1rem;
+}
+
+.employer-profile-value a {
+  color: #ff6b35;
+  text-decoration: none;
+}
+
+.employer-profile-value a:hover {
+  text-decoration: underline;
+}
+
+.wallet-address {
+  font-family: 'Courier New', monospace;
+  font-size: 0.9rem;
+  word-break: break-all;
+}
+
+/* Actions */
+.employer-profile-actions {
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 1px solid #eee;
+}
+
+/* Status Messages */
+.save-status {
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  text-align: center;
+  font-weight: 600;
+}
+
+.save-status.success {
+  background: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+.save-status.error {
+  background: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+/* Loading State */
+.employer-profile-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  text-align: center;
+}
+
+.employer-profile-loading .spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #ff6b35;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.employer-profile-loading p {
+  color: #666;
+  font-size: 1.1rem;
+}
+
+/* Not Authenticated */
+.employer-profile-not-authenticated {
+  text-align: center;
+  padding: 4rem 2rem;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.employer-profile-not-authenticated h2 {
+  color: #333;
+  margin-bottom: 1rem;
+}
+
+.employer-profile-not-authenticated p {
+  color: #666;
+  font-size: 1.1rem;
+}
+
+/* Posted Jobs Section */
+.posted-jobs-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.posted-job-card {
+  background: #f9f9f9;
+  border: 2px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+}
+
+.posted-job-card:hover {
+  border-color: #ff6b35;
+  box-shadow: 0 4px 12px rgba(255, 107, 53, 0.1);
+}
+
+.posted-job-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.posted-job-header h3 {
+  margin: 0;
+  color: #333;
+  font-size: 1.3rem;
+  flex: 1;
+}
+
+.job-status-badge {
+  padding: 0.4rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.job-status-badge.active {
+  background: #d4edda;
+  color: #155724;
+}
+
+.job-status-badge.closed {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.posted-job-description {
+  color: #666;
+  line-height: 1.6;
+  margin-bottom: 1rem;
+}
+
+.posted-job-stats {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.posted-job-stats span {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.hired-badge {
+  margin-top: 1rem;
+  padding: 0.6rem 1rem;
+  background: #d4edda;
+  color: #155724;
+  border-radius: 8px;
+  font-weight: 600;
+  text-align: center;
+  border: 1px solid #c3e6cb;
+}
+
+.jobs-loading {
+  text-align: center;
+  padding: 2rem;
+}
+
+.jobs-loading .spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #ff6b35;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 1rem;
+}
+
+.no-jobs {
+  text-align: center;
+  padding: 2rem;
+  background: #f9f9f9;
+  border-radius: 8px;
+  border: 2px dashed #e0e0e0;
+}
+
+.no-jobs p {
+  color: #666;
+  margin: 0.5rem 0;
+}
+
+.no-jobs strong {
+  color: #ff6b35;
+}
+
+/* Job Actions */
+.job-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e0e0e0;
+}
+
+.view-applications-btn,
+.toggle-status-btn {
+  flex: 1;
+  padding: 0.6rem 1rem;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: white;
+  color: #333;
+}
+
+.view-applications-btn:hover:not(:disabled) {
+  border-color: #ff6b35;
+  color: #ff6b35;
+  background: #fff5f2;
+}
+
+.toggle-status-btn:hover:not(:disabled) {
+  border-color: #666;
+  color: #666;
+  background: #f5f5f5;
+}
+
+.view-applications-btn:disabled,
+.toggle-status-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .employer-profile-container {
+    padding: 1rem;
+  }
+
+  .employer-profile-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .edit-button,
+  .cancel-button {
+    margin-top: 1rem;
+    width: 100%;
+  }
+
+  .employer-profile-content {
+    padding: 1.5rem;
+  }
+
+  .employer-profile-avatar,
+  .employer-profile-avatar-placeholder {
+    width: 100px;
+    height: 100px;
+  }
+
+  .job-actions {
+    flex-direction: column;
+  }
+
+  .view-applications-btn,
+  .toggle-status-btn {
+    width: 100%;
+  }
+
+  .posted-job-stats {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+}
