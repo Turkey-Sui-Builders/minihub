@@ -1,4 +1,4 @@
-# Sui Job Board
+# Mini Hub Board
 
 A decentralized job board platform built on the Sui blockchain, enabling employers to post jobs and candidates to apply on-chain.
 
@@ -47,7 +47,7 @@ A decentralized job board platform built on the Sui blockchain, enabling employe
 public struct JobBoard has key {
     id: UID,
     job_count: u64,
-    job_ids: vector<ID>,
+
 }
 
 // Individual job posting
@@ -151,7 +151,6 @@ sui client publish --gas-budget 100000000
 
 ## Usage Example
 
-### 1. Employer Posts Job
 ```bash
 sui client call --package <PACKAGE_ID> --module minihub --function post_job \
   --args <JOB_BOARD_ID> "Senior Move Developer" "Build blockchain apps" "some(150000)" \
@@ -188,3 +187,170 @@ sui client call --package <PACKAGE_ID> --module minihub --function hire_candidat
 ## License
 
 MIT
+
+---
+
+# TypeScript/React SDK Kullanımı
+
+MiniHub Move kontratı ile TypeScript/React üzerinden etkileşim için optimize edilmiş SDK'yı kullanabilirsiniz. Tüm fonksiyonlar, veri yapıları ve event'ler Move kontratı ile birebir uyumludur.
+
+## Kurulum
+
+```bash
+npm install @mysten/sui
+```
+
+`/sdk/minihub.ts` dosyasını projenize ekleyin.
+
+## SDK'yı Başlatma
+
+```typescript
+import { SuiClient } from '@mysten/sui/client';
+import { createMiniHubSDK, DEFAULT_CLOCK_ID } from './sdk/minihub';
+
+const client = new SuiClient({ url: 'https://fullnode.testnet.sui.io' });
+const sdk = createMiniHubSDK(client, {
+  packageId: '<PACKAGE_ID>',
+  jobBoardId: '<JOB_BOARD_ID>',
+  userRegistryId: '<USER_REGISTRY_ID>',
+  employerRegistryId: '<EMPLOYER_REGISTRY_ID>',
+  clockId: DEFAULT_CLOCK_ID,
+});
+```
+
+## Transaction Fonksiyonları
+
+### 1. İş İlanı Yayınlama
+```typescript
+const tx = sdk.createPostJobTransaction({
+  employerProfileId: '<EMPLOYER_PROFILE_ID>',
+  title: 'Senior Move Developer',
+  description: 'Build blockchain apps',
+  salary: 150000,
+  deadline: Date.now() + 7 * 24 * 60 * 60 * 1000, // 1 hafta sonrası
+});
+// client.signAndExecuteTransactionBlock({ transactionBlock: tx, ... })
+```
+
+### 2. İşe Başvuru
+```typescript
+const tx = sdk.createApplyToJobTransaction({
+  jobId: '<JOB_ID>',
+  userProfileId: '<USER_PROFILE_ID>',
+  coverMessage: 'I have 5 years of blockchain experience',
+  cvUrl: 'https://mycv.com/cv.pdf',
+});
+```
+
+### 3. Adayı İşe Alma
+```typescript
+const tx = sdk.createHireCandidateTransaction({
+  jobId: '<JOB_ID>',
+  employerCapId: '<EMPLOYER_CAP_ID>',
+  candidateAddress: '<CANDIDATE_ADDRESS>',
+  candidateIndex: 0,
+});
+```
+
+### 4. Kullanıcı Profili Oluşturma
+```typescript
+const tx = sdk.createUserProfileTransaction({
+  name: 'Berkay',
+  bio: 'Blockchain developer',
+  avatarUrl: 'https://avatar.com/me.png',
+  skills: ['Move', 'TypeScript'],
+  experienceYears: 5,
+  portfolioUrl: 'https://portfolio.com',
+});
+```
+
+### 5. İşveren Profili Oluşturma
+```typescript
+const tx = sdk.createEmployerProfileTransaction({
+  companyName: 'Sui Labs',
+  description: 'Web3 company',
+  logoUrl: 'https://logo.com/logo.png',
+  website: 'https://suilabs.com',
+  industry: 'Blockchain',
+  employeeCount: 50,
+  foundedYear: 2022,
+});
+```
+
+## Getter Fonksiyonları
+
+### Tüm İş İlanlarını Getir
+```typescript
+const jobs = await sdk.getAllJobs();
+```
+
+### Belirli Bir İş İlanı Detayı
+```typescript
+const job = await sdk.getJob('<JOB_ID>');
+```
+
+### Başvuru Sayısı
+```typescript
+const count = await sdk.getJob('<JOB_ID>').then(j => j?.applicationCount);
+```
+
+### Kullanıcı Profili Detayı
+```typescript
+const profile = await sdk.getUserProfile('<USER_PROFILE_ID>');
+```
+
+### İşveren Profili Detayı
+```typescript
+const employer = await sdk.getEmployerProfile('<EMPLOYER_PROFILE_ID>');
+```
+
+### Tüm Başvuruları Getir
+```typescript
+const applications = await sdk.getJobApplications('<JOB_ID>');
+```
+
+## Event Dinleme
+
+```typescript
+const jobPostedEvents = await sdk.getJobPostedEvents();
+const applicationEvents = await sdk.getApplicationSubmittedEvents();
+const hiredEvents = await sdk.getCandidateHiredEvents();
+```
+
+## Hata Yönetimi
+
+```typescript
+import { ErrorCode, ERROR_MESSAGES } from './sdk/minihub';
+
+try {
+  // işlem
+} catch (e: any) {
+  if (e.code && ERROR_MESSAGES[e.code]) {
+    alert(ERROR_MESSAGES[e.code]);
+  }
+}
+```
+
+## React ile Kullanım
+
+```typescript
+import { useEffect, useState } from 'react';
+
+function JobList() {
+  const [jobs, setJobs] = useState<Job[]>([]);
+
+  useEffect(() => {
+    sdk.getAllJobs().then(setJobs);
+  }, []);
+
+  return (
+    <ul>
+      {jobs.map(job => (
+        <li key={job.id}>{job.title} - {sdk.formatSalary(job.salary)}</li>
+      ))}
+    </ul>
+  );
+}
+```
+
+---
