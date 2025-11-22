@@ -1,6 +1,5 @@
 
 
-![Logo](./logo.png)
 
 # Mini Hub Board
 
