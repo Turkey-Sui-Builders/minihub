@@ -1,7 +1,12 @@
+
+
+![Logo](./logo.png)
+
 # Mini Hub Board
 
 A decentralized job board platform built on the Sui blockchain, enabling employers to post jobs and candidates to apply on-chain.
 
+![Logo](./mini.gif)
 ## Features
 
 ### Core Functionality
@@ -353,4 +358,4 @@ function JobList() {
 }
 ```
 
----
+![Logo](./mini.gif)
