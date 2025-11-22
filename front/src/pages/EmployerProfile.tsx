@@ -35,7 +35,6 @@ export function EmployerProfile() {
     foundedYear: new Date().getFullYear(),
   });
 
-  // Load profile on mount
   useEffect(() => {
     const loadProfile = async () => {
       if (!userAddress) {
@@ -81,7 +80,7 @@ export function EmployerProfile() {
           setIsLoadingJobs(false);
         } else {
           console.log('⚠️ No employer profile found for this wallet');
-          setIsEditMode(true); // Auto-enable edit mode for new profiles
+          setIsEditMode(true); 
         }
       } catch (error) {
         console.error('❌ Error loading employer profile:', error);
@@ -96,7 +95,6 @@ export function EmployerProfile() {
   const handleSave = async () => {
     if (!userAddress) return;
 
-    // Check if user is using zkLogin
     if (zkLogin.isConnected && !walletAccount) {
       setSaveStatus({
         type: 'error',
@@ -138,7 +136,6 @@ export function EmployerProfile() {
             setSaveStatus({ type: 'success', message: 'Employer profile saved successfully!' });
             setIsEditMode(false);
 
-            // Reload profile after 3 seconds
             setTimeout(async () => {
               console.log('🔄 Reloading employer profile...');
               const profile = await sdk.getEmployerProfileByAddress(userAddress);
@@ -194,12 +191,6 @@ export function EmployerProfile() {
     setApplications([]);
   };
 
-  const handleToggleJobStatus = async (job: Job) => {
-    // Job status toggle will be implemented when smart contract supports it
-    const newStatus = job.isActive ? 'inactive' : 'active';
-    alert(`Mark "${job.title}" as ${newStatus}?\n\nThis feature requires a smart contract update and will be available soon.`);
-  };
-
   const handleHire = async (application: ApplicationProfile) => {
     if (!sdk || !userAddress) {
       setSaveStatus({ type: 'error', message: 'SDK not initialized' });
@@ -207,7 +198,6 @@ export function EmployerProfile() {
     }
 
     try {
-      // Get EmployerCap for this job
       const caps = await sdk.getEmployerCaps(userAddress);
       const employerCap = caps.find(cap => cap.jobId === application.jobId);
 
@@ -216,7 +206,6 @@ export function EmployerProfile() {
         return;
       }
 
-      // Find candidate index in applications
       const jobApplications = await sdk.getJobApplications(application.jobId);
       const candidateIndex = jobApplications.findIndex(app => app.candidate === application.candidate);
 
@@ -225,7 +214,6 @@ export function EmployerProfile() {
         return;
       }
 
-      // Create hire transaction
       const tx = sdk.createHireCandidateTransaction({
         jobId: application.jobId,
         employerCapId: employerCap.id,
@@ -233,20 +221,17 @@ export function EmployerProfile() {
         candidateIndex,
       });
 
-      // Execute transaction
       signAndExecute(
         { transaction: tx },
         {
           onSuccess: async () => {
             setSaveStatus({ type: 'success', message: 'Candidate hired successfully!' });
             
-            // Refresh jobs list
             if (userAddress) {
               const jobs = await sdk.getJobsByEmployer(userAddress);
               setPostedJobs(jobs);
             }
             
-            // Close modal
             handleCloseApplications();
           },
           onError: (error) => {
@@ -306,7 +291,6 @@ export function EmployerProfile() {
       </div>
 
       <div className="employer-profile-content">
-        {/* Posted Jobs Section - Show by default, hide when in edit mode */}
         {!isEditMode && (
           <div className="employer-profile-section">
             <h2>Posted Jobs</h2>
@@ -349,13 +333,6 @@ export function EmployerProfile() {
                       >
                         👥 View Applications ({job.applicationCount})
                       </button>
-                      <button 
-                        className="toggle-status-btn"
-                        onClick={() => handleToggleJobStatus(job)}
-                        disabled={!!job.hiredCandidate}
-                      >
-                        {job.isActive ? '⏸️ Mark Inactive' : '▶️ Mark Active'}
-                      </button>
                     </div>
                   </div>
                 ))}
@@ -364,10 +341,8 @@ export function EmployerProfile() {
           </div>
         )}
 
-        {/* Profile Edit Form - Only show when in edit mode */}
         {isEditMode && (
           <>
-            {/* Company Logo */}
             <div className="employer-profile-avatar-section">
               {profileData.logoUrl ? (
                 <img src={profileData.logoUrl} alt="Company Logo" className="employer-profile-avatar" />
@@ -391,7 +366,6 @@ export function EmployerProfile() {
               </div>
             </div>
 
-            {/* Basic Information */}
             <div className="employer-profile-section">
               <h2>Basic Information</h2>
 
@@ -472,7 +446,6 @@ export function EmployerProfile() {
           </>
         )}
 
-        {/* Save/Cancel buttons */}
         {isEditMode && (
           <div className="employer-profile-actions">
             {saveStatus && (
@@ -491,7 +464,6 @@ export function EmployerProfile() {
         )}
       </div>
 
-      {/* Applications Modal */}
       {selectedJobForApplications && sdk && (
         <ApplicationsModal
           job={selectedJobForApplications}
