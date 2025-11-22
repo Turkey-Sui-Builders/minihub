@@ -4,6 +4,7 @@ module minihub::minihub {
     use std::string::{String};
     use sui::package;
     use sui::dynamic_object_field;
+    use minihub::version::Version;
 
     // ====== One-Time Witness for Upgrade Capability ======
     // ====== Contract Yükseltme Yetkisi için One-Time Witness ======
